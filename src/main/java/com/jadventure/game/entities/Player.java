@@ -64,7 +64,7 @@ public class Player extends Entity {
     }
 
     public static Player load(String name) {
-        Player player = new Player();
+        player = new Player();
 
         JsonParser parser = new JsonParser();
         String fileName = getProfileFileName(name);
@@ -174,21 +174,22 @@ public class Player extends Entity {
     public void getStats(){
         Item weapon = new Item(getWeapon());
         String weaponName = weapon.getName();
-        if (weaponName == null){
+        if (weaponName.equals(null) || weaponName.equals("empty")){
             weaponName = "hands";
         }
-        QueueProvider.offer("\nPlayer name: " + getName() +
-                            "\nCurrent weapon: " + weaponName +
-                            "\nGold: " + player.getGold() +
-                            "\nHealth/Max: " + getHealth() + "/" + getHealthMax() +
-                            "\nDamage/Armour: " + getDamage() + "/" + getArmour() +
-                            "\nStrength: " + getStrength() +
-                            "\nIntelligence: " + getIntelligence() +
-                            "\nDexterity: " + getDexterity() +
-                            "\nLuck: " + getLuck() +
-                            "\nStealth: " + getStealth() +
-                            "\nXP: " + getXP() +
-                            "\n" + getName() + "'s level: " + getLevel());
+        String message = "\nPlayer name: " + getName();
+              message += "\nCurrent weapon: " + weaponName;
+              message += "\nGold: " + getGold();
+              message += "\nHealth/Max: " + getHealth() + "/" + getHealthMax();
+              message += "\nDamage/Armour: " + getDamage() + "/" + getArmour();
+              message += "\nStrength: " + getStrength();
+              message += "\nIntelligence: " + getIntelligence();
+              message += "\nDexterity: " + getDexterity();
+              message += "\nLuck: " + getLuck();
+              message += "\nStealth: " + getStealth();
+              message += "\nXP: " + getXP();
+              message += "\n" + getName() + "'s level: " + getLevel();
+        QueueProvider.offer(message);
     }
 
     public void printBackPack() {
@@ -241,7 +242,7 @@ public class Player extends Entity {
     }
 
     public ArrayList<Item> searchItem(String itemName, ArrayList<Item> itemList) {
-        ArrayList<Item> itemMap = new ArrayList();
+        ArrayList<Item> itemMap = new ArrayList<>();
         for (Item item : itemList) {
             String testItemName = item.getName();
             if (testItemName.equals(itemName)) {
@@ -252,11 +253,22 @@ public class Player extends Entity {
     }
 
     public ArrayList<Item> searchItem(String itemName, Storage storage) {
-        ArrayList<Item> itemMap = new ArrayList();
+        ArrayList<Item> itemMap = new ArrayList<>();
         for (ItemStack item : storage.getItems()) {
             String testItemName = item.getItem().getName();
             if (testItemName.equals(itemName)) {
                 itemMap.add(item.getItem());
+            }
+        }
+        return itemMap;
+    }
+    
+    public ArrayList<Item> searchEquipment(String itemName, HashMap<String, Item> equipment) {
+        ArrayList<Item> itemMap = new ArrayList<>();
+        for (Item item : equipment.values()) {
+            String testItemName = item.getName();
+            if (testItemName.equals(itemName)) {
+                itemMap.add(item);
             }
         }
         return itemMap;
@@ -303,10 +315,10 @@ public class Player extends Entity {
     public void equipItem(String place, String itemName) {
 	    Item item = new Item("empty");
 	    if (!itemName.equals("empty")) {
-                 ArrayList<Item> itemMap = searchItem(itemName, getStorage());
-                 if (!itemMap.isEmpty()) {
-                     item = itemMap.get(0);
-             }
+            ArrayList<Item> itemMap = searchItem(itemName, getStorage());
+            if (!itemMap.isEmpty()) {
+                item = itemMap.get(0);
+            }
          }
          HashMap change = this.equipItem(place, item);
          QueueProvider.offer(item.getName() + " equipped");
@@ -314,7 +326,7 @@ public class Player extends Entity {
     }
     
     public void dequipItem(String itemName) {
-         ArrayList<Item> itemMap = searchItem(itemName, getStorage());
+         ArrayList<Item> itemMap = searchEquipment(itemName, getEquipment());
          if (!itemMap.isEmpty()) {
             Item item = itemMap.get(0);
             HashMap change = this.unequipItem(item);
@@ -328,18 +340,40 @@ public class Player extends Entity {
          Iterator i = set.iterator();
          while (i.hasNext()) {
               Map.Entry me = (Map.Entry) i.next();
-              try {
-                   if ((double) me.getValue() > 0.0) {
-                        QueueProvider.offer(me.getKey() + ": " + this.getDamage() + " (+" + me.getValue() + ")\n");
-                  } else {
-                       QueueProvider.offer(me.getKey() + ": " + this.getDamage() + " (" + me.getValue() + ")\n");
-                  }
-              } catch (ClassCastException e) {
-                  if ((int) me.getValue() > 0) {
-                      QueueProvider.offer(me.getKey() + ": " + this.getDamage() + " (+" + me.getValue() + ")\n");
-                  } else {
-                      QueueProvider.offer(me.getKey() + ": " + this.getDamage() + " (" + me.getValue() + ")\n");
-                  }
+              double value = Double.parseDouble((String) me.getValue());
+              switch ((String) me.getKey()) {
+                  case "damage": {
+                          if (value >= 0.0) {
+                              QueueProvider.offer(me.getKey() + ": " + this.getDamage() + " (+" + me.getValue() + ")\n");
+                          } else {
+                              QueueProvider.offer(me.getKey() + ": " + this.getDamage() + " (" + me.getValue() + ")\n");
+                          }
+                          break;
+                    }
+                    case "health": {
+                          if (value >= 0) {
+                              QueueProvider.offer(me.getKey() + ": " + this.getHealth() + " (+" + me.getValue() + ")\n");
+                          } else {
+                              QueueProvider.offer(me.getKey() + ": " + this.getHealth() + " (" + me.getValue() + ")\n");
+                          }
+                          break;
+                    }
+                    case "armour": {
+                          if (value >= 0) {
+                              QueueProvider.offer(me.getKey() + ": " + this.getArmour() + " (+" + me.getValue() + ")\n");
+                          } else {
+                              QueueProvider.offer(me.getKey() + ": " + this.getArmour() + " (" + me.getValue() + ")\n");
+                          }
+                          break;
+                    }
+                    case "maxHealth": {
+                          if (value  >= 0) {
+                              QueueProvider.offer(me.getKey() + ": " + this.getHealthMax() + " (+" + me.getValue() + ")\n");
+                          } else {
+                              QueueProvider.offer(me.getKey() + ": " + this.getHealthMax() + " (" + me.getValue() + ")\n");
+                          }
+                          break;
+                    }
               }
          }
     }

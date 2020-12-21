@@ -6,18 +6,9 @@ import com.jadventure.game.entities.NPC;
 import com.jadventure.game.monsters.Monster;
 import com.jadventure.game.QueueProvider;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * The location class mostly deals with getting and setting variables.
@@ -31,7 +22,7 @@ public class Location implements ILocation {
     private int dangerRating;
     private ArrayList<String> items;
     private ArrayList<String> npcs;
-    private ArrayList<Monster> monsters = new ArrayList<Monster>();
+    private ArrayList<Monster> monsters = new ArrayList<>();
 
     public Location() {
 
@@ -84,18 +75,22 @@ public class Location implements ILocation {
         for(Direction direction: Direction.values()) {
             borderingLocation = LocationManager.getLocation(getCoordinate().getBorderingCoordinate(direction));
             if (borderingLocation != null) {
-                exits.put(direction, borderingLocation);
-            }
+                if (borderingLocation.getCoordinate().getZ() == getCoordinate().getZ()) {
+                    exits.put(direction, borderingLocation);
+                } else if (getLocationType().equals(LocationType.STAIRS)) {
+                    exits.put(direction, borderingLocation);
+                }
+            } 
         }
         return exits;
     }
 
-    public void setItems(ArrayList items) {
+    public void setItems(ArrayList<String> items) {
         this.items = items;
     }
 
     public ArrayList<Item> getItems() {
-        ArrayList<Item> items = new ArrayList<Item>();
+        ArrayList<Item> items = new ArrayList<>();
         for (String itemId : this.items) {
             Item itemName = new Item(itemId);
             items.add(itemName);
@@ -103,12 +98,12 @@ public class Location implements ILocation {
         return items;
     }
 
-    public void setNPCs(ArrayList npcs) {
+    public void setNPCs(ArrayList<String> npcs) {
         this.npcs = npcs;
     }
 
     public ArrayList<NPC> getNPCs() {
-        ArrayList<NPC> npcs = new ArrayList<NPC>();
+        ArrayList<NPC> npcs = new ArrayList<>();
         for (String npcID : this.npcs) {
             NPC npc = new NPC(npcID);
             npcs.add(npc);
@@ -157,19 +152,19 @@ public class Location implements ILocation {
 
     public void print() {
         QueueProvider.offer(getTitle() + ":");
-        QueueProvider.offer(getDescription());
+        QueueProvider.offer("    " + getDescription());
         ArrayList<Item> publicItems = getItems();
         if (!publicItems.isEmpty()) {
             QueueProvider.offer("Items:");
             for (Item item : publicItems) {
-                QueueProvider.offer("    "+item.getName());
+                QueueProvider.offer("    " + item.getName());
             }
         }
         ArrayList<NPC> npcs = getNPCs();
         if (!npcs.isEmpty()) {
             QueueProvider.offer("NPCs:");
             for (NPC npc : npcs) {
-                QueueProvider.offer("   "+npc.getName());
+                QueueProvider.offer("   " + npc.getName());
             }
         }
         QueueProvider.offer("");
